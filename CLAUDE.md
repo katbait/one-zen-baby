@@ -131,6 +131,14 @@ Parents and therapists share a board across devices.
 - **App name:** One Zen Baby (current working name).
 - **Starter list (24 items, in this order):** I want, Bath, Eat, Drink, Milk, Water, Juice, Snack, Play, Go Outside, Go Play, Go to Park, Take Nap, Cars, Animals, Puppies, Kitties, Grandma, Grandpa, Tablet, Phone, TV, Grocery Store, Swimming. "I want" pairs naturally with the 2-lit-tile limit (e.g. "I want" + "Juice").
 
+- **Parent gate:** press and hold the small ⚙️ button (bottom right of the child board) for 2 seconds; a quick tap shows "Hold to open". Chosen over a PIN (nothing to forget). Easy to change.
+- **Wizard order as built:** Pictures, Words, Add your own?, Voice, Preview?, Arrange, then the child board. Words start unselected; Next only works when the count fills whole screens.
+
+## Code layout
+- `index.html` (three views: child, parent, arrange), `style.css`.
+- `js/app.js` startup; `js/starter.js` starter words; `js/model.js` board rules; `js/storage.js` the only file that saves/loads (localStorage for board JSON now; IndexedDB blobs in step 3; Firebase in step 5); `js/pages.js` builds 4-tile screens; `js/child.js` child board, tap rules, gate; `js/parent.js` wizard, parent menu, boards; `js/arrange.js` hold-drag-swap; `js/views.js` switches views.
+- JS files are ES modules, so the app must be opened through `python -m http.server`, not by double-clicking.
+
 ## Open questions (ask the developer before building these parts)
 - Where the drawn and photo artwork for the starter items comes from.
 - Domain (optional).

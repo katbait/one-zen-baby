@@ -1,18 +1,32 @@
 /* ============================================================
-   Choice Board - child mode styles
+   One Zen Baby - styles
+   1. Basics and views
+   2. The board (swipe strip, screens, tiles, dots) - child mode
+   3. Parent gate and preview button
+   4. Parent mode (wizard and menu)
+   5. Arrange view (drag to swap)
    ============================================================ */
 
 /* Colors and spacing in one place, so they are easy to tweak. */
 :root {
-  --bg:   #1f3a5f;   /* page background (dark blue) */
+  --bg:   #1f3a5f;   /* board background (dark blue) */
   --tile: #fdf6e3;   /* tile background (warm off-white) */
   --ink:  #1b2430;   /* text color */
   --glow: #ffd23f;   /* highlight color for lit tiles and current dot */
   --dot:  #7f9cc4;   /* inactive page dots */
   --gap:  clamp(8px, 2.2vmin, 18px);  /* space between tiles; scales with screen */
+
+  /* parent mode: light and calm, clearly different from the child board */
+  --parent-bg: #f7f4ee;
+  --card:      #ffffff;
+  --primary:   #1f3a5f;
+  --muted:     #5b6575;
+  --line:      #e3ddd0;
 }
 
+/* ---------- 1. Basics and views ---------- */
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }   /* make the hidden attribute always win */
 
 html, body {
   height: 100%;
@@ -23,20 +37,26 @@ html, body {
      so a child dragging down can't reload the page. */
   overscroll-behavior: none;
 }
+body { overflow: hidden; }
+button { font: inherit; cursor: pointer; }
 
-body {
+/* Each view fills the whole screen; only one is visible at a time. */
+.view {
+  position: fixed;
+  inset: 0;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
   /* Keep content out from under notches / rounded corners / gesture bars. */
   padding: env(safe-area-inset-top) env(safe-area-inset-right)
            env(safe-area-inset-bottom) env(safe-area-inset-left);
 }
 
-/* ---------- The swipe strip ----------
-   All screens sit side by side in one horizontal row. Scroll-snap makes
+
+/* ---------- 2. The board ---------- */
+
+/* The swipe strip: all screens side by side in one row. Scroll-snap makes
    every swipe stop exactly on a screen, never halfway between two. */
-#pages {
+.strip {
   flex: 1;
   min-height: 0;
   display: flex;
@@ -46,11 +66,11 @@ body {
   scrollbar-width: none;      /* hide the scrollbar (Firefox) */
   touch-action: pan-x;        /* allow only sideways swiping: no pinch-zoom, no double-tap zoom */
 }
-#pages::-webkit-scrollbar { display: none; }  /* hide the scrollbar (Chrome/Safari) */
+.strip::-webkit-scrollbar { display: none; }  /* hide the scrollbar (Chrome/Safari) */
 
-/* ---------- One screen = 4 tiles in a 2x2 grid (portrait and landscape) ---------- */
+/* One screen = 4 tiles in a 2x2 grid (portrait and landscape). */
 .page {
-  flex: 0 0 100%;             /* each screen is exactly as wide as the viewport */
+  flex: 0 0 100%;             /* each screen is exactly as wide as the strip */
   scroll-snap-align: start;
   scroll-snap-stop: always;   /* a fast flick moves one screen, not several */
   display: grid;
@@ -60,7 +80,6 @@ body {
   padding: var(--gap);
 }
 
-/* ---------- Tiles ---------- */
 .tile {
   position: relative;
   min-width: 0;
@@ -80,13 +99,13 @@ body {
      they fit whether the tile is wide-and-short (landscape) or tall-and-narrow
      (portrait). 1cqmin = 1% of the tile's smaller side. */
   container-type: size;
-  /* No text selection, no grey flash on tap. */
+  /* No text selection, no grey flash on tap, no iPhone long-press popup. */
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
   -webkit-tap-highlight-color: transparent;
   touch-action: pan-x;
-  transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+  transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease, opacity .12s ease;
 }
 
 /* Emoji placeholder picture */
@@ -98,7 +117,7 @@ body {
   pointer-events: none;       /* stops the browser's "drag image" behavior */
 }
 /* If the word is hidden, the picture can use more space. */
-.tile.no-word .pic   { font-size: 66cqmin; }
+.tile.no-word .pic    { font-size: 66cqmin; }
 .tile.no-word img.pic { width: 80cqmin; height: 80cqmin; }
 
 .tile .word {
@@ -118,32 +137,288 @@ body {
   box-shadow: 0 0 0 6px rgba(255,210,63,.35), 0 0 36px 8px rgba(255,210,63,.55);
 }
 
-/* Small shake when a 3rd tile is tapped while 2 are already lit. */
+/* Small shake when a 3rd tile is tapped while 2 are already lit on that screen. */
 .tile.nope { animation: nope .25s ease; }
 @keyframes nope {
   25% { transform: translateX(-6px); }
   75% { transform: translateX(6px); }
 }
 
-/* ---------- Page dots ---------- */
-#dots {
+/* Page dots */
+.dots {
   display: flex;
   justify-content: center;
   gap: 10px;
-  padding: 4px 0 12px;
+  padding: 4px 0;
 }
-#dots:empty, #dots.single { display: none; }   /* no dots when there's only one screen */
-#dots span {
+.dots.single { visibility: hidden; }   /* no dots for a single screen (but keep the space) */
+.dots span {
   width: 12px; height: 12px;
   border-radius: 50%;
   background: var(--dot);
   opacity: .5;
   transition: all .2s;
 }
-#dots span.cur { opacity: 1; background: var(--glow); transform: scale(1.3); }
+.dots span.cur { opacity: 1; background: var(--glow); transform: scale(1.3); }
+
+
+/* ---------- 3. Parent gate and preview button ---------- */
+
+/* Bottom bar: [empty] [dots in the middle] [gear on the right] */
+.bottom-bar {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding: 0 var(--gap) 8px;
+  min-height: 52px;
+}
+
+.gate {
+  justify-self: end;
+  width: 44px; height: 44px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255,255,255,.12);
+  font-size: 20px;
+  opacity: .6;                /* quiet, so it doesn't attract the child */
+  touch-action: none;         /* holding it must not scroll anything */
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+/* While held: a glowing ring grows over 2 seconds. */
+.gate.holding { opacity: 1; animation: hold 2s linear forwards; }
+@keyframes hold {
+  from { box-shadow: 0 0 0 0    rgba(255,210,63,.9); }
+  to   { box-shadow: 0 0 0 16px rgba(255,210,63,.9); }
+}
+
+.gate-hint {
+  position: absolute;
+  right: calc(var(--gap) + 56px);
+  bottom: 14px;
+  background: rgba(0,0,0,.65);
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 15px;
+}
+
+.preview-exit {
+  justify-self: end;
+  min-height: 44px;
+  padding: 0 18px;
+  border: none;
+  border-radius: 999px;
+  background: var(--glow);
+  color: var(--ink);
+  font-weight: 700;
+  font-size: 17px;
+}
+
+
+/* ---------- 4. Parent mode ---------- */
+#parent-view, #arrange-view {
+  background: var(--parent-bg);
+  color: var(--ink);
+}
+
+/* Top bar: Back on the left, step / title on the right */
+.bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--line);
+}
+.bar .step { color: var(--muted); font-size: 15px; }
+
+.parent-body {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 16px 16px 24px;
+}
+.parent-body h1 { font-size: clamp(22px, 5vw, 30px); margin: 4px 0 8px; }
+.parent-body h2 { font-size: 18px; color: var(--muted); margin: 24px 0 10px; }
+.sub  { color: var(--muted); font-size: 17px; margin: 0 0 16px; }
+.note { color: var(--muted); font-size: 17px; margin-top: 16px; }
+
+.parent-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 10px 16px;
+  border-top: 1px solid var(--line);
+}
+
+/* Buttons */
+.btn {
+  min-height: 48px;
+  padding: 0 20px;
+  border: 2px solid var(--primary);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--primary);
+  font-weight: 700;
+  font-size: 17px;
+}
+.btn.primary { background: var(--primary); color: #fff; margin-left: auto; }
+.btn.small   { min-height: 40px; padding: 0 14px; font-size: 15px; }
+.btn:disabled { opacity: .35; cursor: default; }
+.btn.danger  { border-color: #a33; color: #a33; }
+.btn.danger.armed { background: #a33; color: #fff; }
+
+.btn-back {
+  min-height: 44px;
+  padding: 0 8px;
+  border: none;
+  background: none;
+  color: var(--primary);
+  font-size: 18px;
+  font-weight: 700;
+}
+
+/* Big choice cards (one decision per screen) */
+.choices {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+}
+.choice {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 24px 16px;
+  background: var(--card);
+  border: 3px solid var(--line);
+  border-radius: 20px;
+  color: var(--ink);
+  font-size: 20px;
+  font-weight: 700;
+}
+.choice .choice-pic { font-size: 56px; line-height: 1; }
+.choice small { font-size: 16px; font-weight: 400; color: var(--muted); }
+.choice.selected { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(31,58,95,.2); }
+
+/* Words step: grid of cards with a check mark when chosen */
+.word-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 10px;
+}
+.word-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 6px;
+  background: var(--card);
+  border: 3px solid var(--line);
+  border-radius: 16px;
+  color: var(--ink);
+}
+.word-card .pic { font-size: 40px; line-height: 1; }
+.word-card .w   { font-size: 15px; font-weight: 700; text-align: center; }
+.word-card .check {
+  position: absolute;
+  top: 6px; right: 6px;
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  font-size: 14px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+.word-card.on { border-color: var(--primary); background: #eef3fa; }
+.word-card.on .check { display: flex; }
+
+.status    { font-size: 17px; font-weight: 600; }
+.status.ok { color: #1d6b3a; }
+
+/* Parent menu */
+.title-row { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
+.title-row h1 { margin: 0; }
+.name-input {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  font-size: 20px;
+  padding: 8px 12px;
+  border: 2px solid var(--primary);
+  border-radius: 10px;
+}
+.menu-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 10px;
+}
+.menu-item, .board-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 56px;
+  padding: 10px 14px;
+  background: var(--card);
+  border: 2px solid var(--line);
+  border-radius: 14px;
+  color: var(--ink);
+  font-size: 17px;
+  font-weight: 700;
+  text-align: left;
+}
+.menu-item .icon { font-size: 24px; }
+.board-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+.board-row.current { border-color: var(--primary); }
+.board-row small { font-weight: 400; color: var(--muted); }
+.row { display: flex; flex-wrap: wrap; gap: 10px; }
+.row .btn.danger { margin-left: auto; }
+
+
+/* ---------- 5. Arrange view ---------- */
+#arrange-view .hint {
+  margin: 8px 16px;
+  color: var(--muted);
+  font-size: 16px;
+  text-align: center;
+}
+/* The board area looks just like the child board. */
+.arrange-board {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  padding-bottom: 6px;
+}
+/* While a tile is held, the strip can't be swiped (screens flip at the edges instead). */
+.strip.dragging { overflow-x: hidden; }
+
+.tile.lifted { opacity: .3; }                                   /* the empty spot it came from */
+.tile.target { border-color: var(--glow); border-style: dashed; } /* where it will land */
+.tile.ghost {                                                   /* the copy under your finger */
+  position: fixed;
+  z-index: 100;
+  pointer-events: none;
+  transform: scale(1.06);
+  box-shadow: 0 12px 30px rgba(0,0,0,.35);
+  opacity: .95;
+  transition: none;
+}
 
 /* Respect the device's "reduce motion" accessibility setting. */
 @media (prefers-reduced-motion: reduce) {
-  .tile, #dots span { transition: none; }
-  .tile.nope { animation: none; }
+  .tile, .dots span { transition: none; }
+  .tile.nope, .gate.holding { animation: none; }
 }

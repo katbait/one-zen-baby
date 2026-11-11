@@ -3,18 +3,46 @@
 <head>
 <meta charset="utf-8">
 <!-- viewport-fit=cover lets the board use the full screen on phones with notches;
-     safe-area padding in style.css keeps tiles out from under the notch. -->
+     safe-area padding in style.css keeps content out from under the notch. -->
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>One Zen Baby</title>
 <link rel="stylesheet" href="style.css">
+<!-- type="module" lets the JS files import from each other (like Python imports).
+     Modules only work from a web server (python -m http.server), not by double-clicking the file. -->
+<script type="module" src="js/app.js"></script>
 </head>
 <body>
-  <!-- The swipeable strip. board.js fills it with one .page per screen of 4 tiles. -->
-  <div id="pages" aria-label="Choice pages"></div>
-  <!-- One dot per screen; the current screen's dot is highlighted. -->
-  <div id="dots" aria-hidden="true"></div>
 
-  <!-- "defer" runs the script after the HTML above has loaded, so the elements exist. -->
-  <script src="board.js" defer></script>
+  <!-- ===== CHILD VIEW: the board (also used for Preview) ===== -->
+  <main id="child-view" class="view" hidden>
+    <div id="pages" class="strip" aria-label="Choice pages"></div>
+    <div class="bottom-bar">
+      <span></span>
+      <div id="dots" class="dots" aria-hidden="true"></div>
+      <!-- Parent gate: press and hold for 2 seconds -->
+      <button id="parent-btn" class="gate" aria-label="Parent settings (press and hold)">⚙️</button>
+      <!-- Shown instead of the gate during Preview -->
+      <button id="preview-exit" class="preview-exit" hidden>‹ Back</button>
+      <div id="parent-hint" class="gate-hint" hidden>Hold to open</div>
+    </div>
+  </main>
+
+  <!-- ===== PARENT VIEW: setup wizard and parent menu (filled in by parent.js) ===== -->
+  <section id="parent-view" class="view" hidden></section>
+
+  <!-- ===== ARRANGE VIEW: drag tiles to swap them (arrange.js) ===== -->
+  <section id="arrange-view" class="view" hidden>
+    <header class="bar">
+      <button id="arrange-back" class="btn-back">‹ Back</button>
+      <span id="arrange-step" class="step"></span>
+      <button id="arrange-done" class="btn primary">Done</button>
+    </header>
+    <p class="hint">Hold a tile, then drop it on another tile to swap them. Hold it at the edge to change screens.</p>
+    <div class="arrange-board">
+      <div id="arrange-pages" class="strip"></div>
+      <div id="arrange-dots" class="dots" aria-hidden="true"></div>
+    </div>
+  </section>
+
 </body>
 </html>
