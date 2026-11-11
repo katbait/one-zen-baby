@@ -4,7 +4,8 @@
    - A board whose setup wasn't finished: carry on with setup.
    - Otherwise: show the child board.
    ============================================================ */
-import { loadCurrentBoard, newBoard, enabledItems } from "./model.js";
+import { loadCurrentBoard, newBoard } from "./model.js";
+import { boardTiles } from "./media.js";
 import * as storage from "./storage.js";
 import { showChildBoard, setParentOpener } from "./child.js";
 import { startSetup, openParentMenu } from "./parent.js";
@@ -37,5 +38,5 @@ async function start() {
     return;
   }
 
-  showChildBoard(enabledItems(board));
+  showChildBoard(await boardTiles(board));
 }

@@ -132,11 +132,17 @@ Parents and therapists share a board across devices.
 - **Starter list (24 items, in this order):** I want, Bath, Eat, Drink, Milk, Water, Juice, Snack, Play, Go Outside, Go Play, Go to Park, Take Nap, Cars, Animals, Puppies, Kitties, Grandma, Grandpa, Tablet, Phone, TV, Grocery Store, Swimming. "I want" pairs naturally with the 2-lit-tile limit (e.g. "I want" + "Juice").
 
 - **Parent gate:** press and hold the small ⚙️ button (bottom right of the child board) for 2 seconds; a quick tap shows "Hold to open". Chosen over a PIN (nothing to forget). Easy to change.
-- **Wizard order as built:** Pictures, Words, Add your own?, Voice, Preview?, Arrange, then the child board. Words start unselected; Next only works when the count fills whole screens.
+- **Wizard order as built:** Pictures, Words, Your own pictures, Voice, Preview?, Arrange, then the child board. Words start unselected.
+- **Full-screens check:** during setup the Words step allows any number (even 0, since a parent may use all their own pictures); the check happens at the Your own pictures step. In edit mode, Save always needs full screens.
+- **Starter set vs own pictures:** the starter set is a basis that the owner (developer) can change in `js/starter.js` at any time. A parent can mix any starter words with their own pictures (photo or uploaded image + typed word), or use only their own (e.g. 24 of their own).
+- **Voice rule:** a word with a recording always plays the recording; otherwise the built-in voice says it. Choosing "My own voice" walks through every word on the board, one per screen (with "Finish later"). In edit mode with own voice, newly added words without a recording trigger the walk-through for just those. Switching back to the built-in voice asks "Keep your recordings?" (keep / remove). Recordings stop after 5 seconds.
+- **Own picture limits:** a photo and a word are required; the recording is optional. Photos are shrunk to 800px JPEG before saving.
 
 ## Code layout
 - `index.html` (three views: child, parent, arrange), `style.css`.
-- `js/app.js` startup; `js/starter.js` starter words; `js/model.js` board rules; `js/storage.js` the only file that saves/loads (localStorage for board JSON now; IndexedDB blobs in step 3; Firebase in step 5); `js/pages.js` builds 4-tile screens; `js/child.js` child board, tap rules, gate; `js/parent.js` wizard, parent menu, boards; `js/arrange.js` hold-drag-swap; `js/views.js` switches views.
+- `js/app.js` startup; `js/starter.js` starter words; `js/model.js` board rules; `js/storage.js` the only file that saves/loads (localStorage for board JSON now; IndexedDB blobs in step 3; Firebase in step 5); `js/pages.js` builds 4-tile screens; `js/child.js` child board, tap rules, gate; `js/parent.js` wizard, parent menu, boards; `js/arrange.js` hold-drag-swap; `js/views.js` switches views; `js/media.js` photo/recording URLs and photo shrinking; `js/speech.js` plays recordings or the built-in voice; `js/recorder.js` microphone recording.
+- Photos and recordings are stored in IndexedDB (via `storage.js` `saveBlob`/`getBlob`/`deleteBlob`); boards keep only `imageRef`/`audioRef`.
+- Recording on a phone needs HTTPS (works on desktop at http://localhost).
 - JS files are ES modules, so the app must be opened through `python -m http.server`, not by double-clicking.
 
 ## Open questions (ask the developer before building these parts)

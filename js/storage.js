@@ -63,4 +63,60 @@ export async function setCurrentBoardId(id) {
   localStorage.setItem(CURRENT_KEY, id);
 }
 
-// Coming in step 3: saveBlob() / getBlob() for photos and voice recordings (IndexedDB).
+/* ============================================================
+   PHOTOS AND RECORDINGS ("blobs" = chunks of file data)
+   ------------------------------------------------------------
+   These are too big for localStorage, so they go in IndexedDB, the
+   browser's built-in database for larger data. A board only stores a
+   short reference ("ref") to each file, like a filename.
+
+   IndexedDB is old and uses callbacks (onsuccess/onerror) instead of
+   Promises, so the two helpers below wrap it to work with `await`.
+   We store each file as { type, data: ArrayBuffer } instead of the Blob
+   itself, which older iPhones handled badly.
+   ============================================================ */
+const DB_NAME = "oneZenBaby";
+const STORE   = "blobs";
+let dbPromise = null;
+
+function openDb() {
+  if (!dbPromise) {
+    dbPromise = new Promise((resolve, reject) => {
+      const request = indexedDB.open(DB_NAME, 1);
+      // Runs only the first time (or when the version number goes up): create the table.
+      request.onupgradeneeded = () => request.result.createObjectStore(STORE);
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+  }
+  return dbPromise;
+}
+
+/** Run one request against the blobs table and wait for it to finish. */
+async function runRequest(mode, makeRequest) {
+  const db = await openDb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE, mode);
+    const request = makeRequest(tx.objectStore(STORE));
+    tx.oncomplete = () => resolve(request.result);
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+/** Save a file; returns its ref (a short id string). */
+export async function saveBlob(blob) {
+  const ref = "f" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  const record = { type: blob.type, data: await blob.arrayBuffer() };
+  await runRequest("readwrite", store => store.put(record, ref));
+  return ref;
+}
+
+/** Get a file back by ref (or null if it's missing). */
+export async function getBlob(ref) {
+  const record = await runRequest("readonly", store => store.get(ref));
+  return record ? new Blob([record.data], { type: record.type }) : null;
+}
+
+export async function deleteBlob(ref) {
+  await runRequest("readwrite", store => store.delete(ref));
+}

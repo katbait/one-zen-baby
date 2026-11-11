@@ -6,7 +6,9 @@
      id, name,
      pictureStyle: "drawn" | "photo",
      voice:        "device" | "own",
-     items:   [ { id, word, emoji, showWord, speak, builtIn }, ... ],
+     items:   [ { id, word, emoji, imageRef, audioRef, showWord, speak, builtIn }, ... ],
+              // imageRef / audioRef: refs to photo / recording files (storage.js), or null.
+              // Built-in items use emoji; parents' own items use imageRef.
      enabled: [ "milk", "juice", ... ],   // ids shown on the board, in order
      setupDone: false,                    // true once the wizard is finished
      createdAt, updatedAt
@@ -19,7 +21,7 @@ export const PER_PAGE  = 4;    // tiles per screen (fixed by design)
 export const MAX_TILES = 40;   // 10 screens of 4
 
 /** A short unique id, e.g. "blq3x9k2ab1". */
-function makeId() {
+export function makeId() {
   return "b" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 }
 

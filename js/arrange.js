@@ -14,7 +14,7 @@
    ============================================================ */
 import { createPager } from "./pages.js";
 import { showView } from "./views.js";
-import { enabledItems } from "./model.js";
+import { boardTiles } from "./media.js";
 import * as storage from "./storage.js";
 
 const HOLD_MS      = 400;   // how long to hold before a tile is picked up
@@ -36,13 +36,13 @@ let press = null;   // a finger is down on a tile, waiting to see if it's a hold
 let drag  = null;   // a tile is picked up and being dragged
 
 /** Open the Arrange view for a board. */
-export function showArrange(theBoard, { stepLabel = "", onBack: back, onDone: done }) {
+export async function showArrange(theBoard, { stepLabel = "", onBack: back, onDone: done }) {
   board = theBoard;
   onBack = back;
   onDone = done;
   stepEl.textContent = stepLabel;
   showView("arrange-view");
-  pager.render(enabledItems(board));
+  pager.render(await boardTiles(board));
   pager.goTo(0);
 }
 
@@ -166,7 +166,7 @@ async function drop(x, y) {
   const j = order.indexOf(target.dataset.id);
   [order[i], order[j]] = [order[j], order[i]];   // swap (like a, b = b, a in Python)
   await storage.saveBoard(board);
-  pager.render(enabledItems(board));       // stays on the current screen
+  pager.render(await boardTiles(board));   // stays on the current screen
 }
 
 function endDrag() {

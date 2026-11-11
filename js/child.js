@@ -2,12 +2,13 @@
    child.js - the board the child uses.
    1. Tap rules (see onTileTap).
    2. Tap vs swipe, and two fingers at once.
-   3. Speech / recorded sound.
+   3. Speech / recorded sound (see speech.js).
    4. The parent gate: press and hold the ⚙️ button for 2 seconds.
    The same view is used for "Preview", with a Back button instead of ⚙️.
    ============================================================ */
 import { createPager } from "./pages.js";
 import { showView } from "./views.js";
+import { sayItem, stopSpeaking } from "./speech.js";
 
 const MAX_LIT = 2;               // at most 2 tiles lit per screen
 const SWIPE_PX = 10;             // a touch that moves farther than this is a swipe, not a tap
@@ -27,7 +28,8 @@ export function setParentOpener(fn) {
   openParent = fn;
 }
 
-/** Show the child board with these items.
+/** Show the child board with these items (with photo/recording URLs
+    already filled in - see boardTiles() in media.js).
     preview: true shows a Back button (calls onExit) instead of the ⚙️ gate. */
 export function showChildBoard(items, { preview = false, onExit = null } = {}) {
   itemsById = new Map(items.map(item => [item.id, item]));
@@ -103,32 +105,8 @@ strip.addEventListener("pointerup", e => {
 strip.addEventListener("pointercancel", e => fingerStarts.delete(e.pointerId));
 
 
-/* ============================================================
-   3. SPEECH / SOUND
-   ============================================================ */
-// Play the item's recorded sound if it has one, otherwise use the device voice.
-function sayItem(item) {
-  if (!item || !item.speak) return;
-
-  if (item.audio) {
-    new Audio(item.audio).play().catch(() => speakWord(item.word));  // fall back to voice if playback fails
-  } else {
-    speakWord(item.word);
-  }
-}
-
-function speakWord(word) {
-  if (!("speechSynthesis" in window)) return;   // very old browser: stay silent
-  const utterance = new SpeechSynthesisUtterance(word);
-  utterance.lang = document.documentElement.lang || "en";
-  utterance.rate = 0.85;                         // a little slower than normal, for small children
-  // We don't cancel what's already playing, so two quick taps are both heard in turn.
-  speechSynthesis.speak(utterance);
-}
-
-function stopSpeaking() {
-  if ("speechSynthesis" in window) speechSynthesis.cancel();
-}
+/* (3. Speech / sound lives in speech.js: a recording if there is one,
+   otherwise the built-in voice.) */
 
 
 /* ============================================================

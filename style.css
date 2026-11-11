@@ -110,10 +110,11 @@ button { font: inherit; cursor: pointer; }
 
 /* Emoji placeholder picture */
 .tile .pic { font-size: 52cqmin; line-height: 1; }
-/* Real image (photo or drawing) */
+/* Real image (photo or drawing): a rounded square, cropped to fill it */
 .tile img.pic {
   width: 62cqmin; height: 62cqmin;
-  object-fit: contain;
+  object-fit: cover;
+  border-radius: 6cqmin;
   pointer-events: none;       /* stops the browser's "drag image" behavior */
 }
 /* If the word is hidden, the picture can use more space. */
@@ -328,6 +329,7 @@ button { font: inherit; cursor: pointer; }
   color: var(--ink);
 }
 .word-card .pic { font-size: 40px; line-height: 1; }
+.word-card img.pic { width: 64px; height: 64px; object-fit: cover; border-radius: 10px; }
 .word-card .w   { font-size: 15px; font-weight: 700; text-align: center; }
 .word-card .check {
   position: absolute;
@@ -386,6 +388,88 @@ button { font: inherit; cursor: pointer; }
 .row .btn.danger { margin-left: auto; }
 
 
+/* Your own pictures: card + "Edit" link, and the dashed "+ Add a picture" card */
+.own-card { display: flex; flex-direction: column; }
+.own-card .word-card { flex: 1; }
+.edit-link {
+  min-height: 36px;
+  border: none;
+  background: none;
+  color: var(--primary);
+  font-weight: 700;
+  text-decoration: underline;
+}
+.add-card { border-style: dashed; justify-content: center; }
+.add-card .pic { color: var(--primary); }
+
+/* Add a picture screen */
+.photo-pick {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: min(100%, 260px);
+  aspect-ratio: 1;
+  margin: 0 auto;
+  border: 3px dashed var(--line);
+  border-radius: 20px;
+  background: var(--card);
+  overflow: hidden;
+  cursor: pointer;
+  text-align: center;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--primary);
+}
+.photo-pick .choice-pic { font-size: 56px; }
+.photo-pick img { width: 100%; height: 100%; object-fit: cover; }
+/* Hidden but still clickable through its <label> (display:none can break this on some phones) */
+.visually-hidden {
+  position: absolute;
+  width: 1px; height: 1px;
+  opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.center { text-align: center; }
+.field-label { display: block; margin: 16px 0 6px; font-size: 17px; font-weight: 700; }
+.text-input {
+  width: 100%;
+  font: inherit;
+  font-size: 20px;
+  padding: 10px 12px;
+  border: 2px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+}
+.text-input:focus { border-color: var(--primary); outline: none; }
+.parent-body h2 small { font-weight: 400; }
+.note.warn { color: #8a4b00; }
+.privacy { margin-top: 20px; font-size: 15px; color: var(--muted); }
+
+/* Recorder */
+.recorder { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.btn.rec { border-color: #b3261e; color: #b3261e; }
+.btn.rec.recording { background: #b3261e; color: #fff; animation: pulse 1s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: .7; } }
+.rec-status { flex-basis: 100%; margin: 2px 0 0; color: var(--muted); font-size: 16px; }
+
+/* Voice walk-through: the word being recorded, shown like a tile */
+.walk-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: min(100%, 240px);
+  margin: 0 auto 20px;
+  padding: 20px;
+  background: var(--tile);
+  border-radius: 24px;
+}
+.walk-tile .pic { font-size: 96px; line-height: 1; }
+.walk-tile img.pic { width: 160px; height: 160px; object-fit: cover; border-radius: 16px; }
+.walk-tile .w { font-size: 26px; font-weight: 700; }
+
+
 /* ---------- 5. Arrange view ---------- */
 #arrange-view .hint {
   margin: 8px 16px;
@@ -420,5 +504,5 @@ button { font: inherit; cursor: pointer; }
 /* Respect the device's "reduce motion" accessibility setting. */
 @media (prefers-reduced-motion: reduce) {
   .tile, .dots span { transition: none; }
-  .tile.nope, .gate.holding { animation: none; }
+  .tile.nope, .gate.holding, .btn.rec.recording { animation: none; }
 }
