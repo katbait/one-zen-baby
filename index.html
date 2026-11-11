@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Choice Board</title>
+<style>
+  :root {
+    --bg: #1f3a5f;
+    --tile: #fdf6e3;
+    --ink: #1b2430;
+    --glow: #ffd23f;
+    --dot: #7f9cc4;
+    --gap: 14px;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; background: var(--bg); font-family: "Trebuchet MS", "Segoe UI", system-ui, sans-serif; }
+  body { display: flex; flex-direction: column; overflow: hidden; padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom); }
+
+  #pages {
+    flex: 1; display: flex; overflow-x: auto; overflow-y: hidden;
+    scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; touch-action: pan-x;
+  }
+  #pages::-webkit-scrollbar { display: none; }
+
+  .page {
+    flex: 0 0 100%; scroll-snap-align: start; scroll-snap-stop: always;
+    display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr;
+    gap: var(--gap); padding: var(--gap);
+  }
+
+  .tile {
+    position: relative; background: var(--tile); color: var(--ink);
+    border: 6px solid transparent; border-radius: 28px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 8px; min-height: 0; user-select: none; -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent; touch-action: pan-x;
+    transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+  }
+  .tile .pic { font-size: min(22vmin, 22vw); line-height: 1; }
+  .tile img.pic { max-width: 70%; max-height: 60%; object-fit: contain; }
+  .tile .word { font-size: min(7vmin, 9vw); font-weight: 700; }
+  .tile.on {
+    border-color: var(--glow); transform: scale(1.03);
+    box-shadow: 0 0 0 6px rgba(255,210,63,.35), 0 0 36px 8px rgba(255,210,63,.55);
+    background: #fff;
+  }
+
+  .tile.nope { animation: nope .25s ease; }
+  @keyframes nope { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+
+  #dots { display: flex; justify-content: center; gap: 10px; padding: 4px 0 14px; }
+  #dots span { width: 12px; height: 12px; border-radius: 50%; background: var(--dot); opacity: .5; transition: all .2s; }
+  #dots span.cur { opacity: 1; background: var(--glow); transform: scale(1.3); }
+
+  @media (orientation: landscape) { .tile .pic { font-size: min(26vh, 20vw); } }
+  @media (prefers-reduced-motion: reduce) { .tile { transition: none; } }
+</style>
+</head>
+<body>
+<div id="pages" aria-label="Choice pages"></div>
+<div id="dots"></div>
+
+<script>
+/* ---------- DATA ----------
+   Later this list comes from the parent's settings + IndexedDB.
+   Each item: emoji OR image (URL/data URI), word, showWord, speak, audio (optional file) */
+const ITEMS = [
+  { word: "Apple",  emoji: "🍎" }, { word: "Dog",   emoji: "🐶" },
+  { word: "Ball",   emoji: "⚽" }, { word: "Water", emoji: "💧" },
+  { word: "Car",    emoji: "🚗" }, { word: "Book",  emoji: "📖" },
+  { word: "Cookie", emoji: "🍪" }, { word: "Cat",   emoji: "🐱" },
+  { word: "Music",  emoji: "🎵" }, { word: "Sleep", emoji: "😴" },
+  { word: "Bath",   emoji: "🛁" }, { word: "Outside", emoji: "🌳" },
+].map(i => ({ showWord: true, speak: true, ...i }));
+
+const MAX_ON = 2;           // at most 2 highlighted at once
+const PER_PAGE = 4;
+let active = [];            // tile ids currently highlighted, oldest first
+
+/* ---------- BUILD PAGES ---------- */
+const pagesEl = document.getElementById("pages");
+const dotsEl = document.getElementById("dots");
+
+function render() {
+  pagesEl.innerHTML = ""; dotsEl.innerHTML = "";
+  const count = Math.ceil(ITEMS.length / PER_PAGE);
+  for (let p = 0; p < count; p++) {
+    const page = document.createElement("div");
+    page.className = "page";
+    ITEMS.slice(p * PER_PAGE, p * PER_PAGE + PER_PAGE).forEach((item, k) => {
+      const tile = document.createElement("div");
+      tile.className = "tile";
+      tile.dataset.id = p * PER_PAGE + k;
+      tile.setAttribute("role", "button");
+      tile.setAttribute("aria-label", item.word);
+      const pic = item.image ? Object.assign(document.createElement("img"), { src: item.image, alt: "" })
+                             : Object.assign(document.createElement("div"), { textContent: item.emoji });
+      pic.className = "pic";
+      tile.appendChild(pic);
+      if (item.showWord) {
+        const w = document.createElement("div");
+        w.className = "word"; w.textContent = item.word;
+        tile.appendChild(w);
+      }
+      page.appendChild(tile);
+    });
+    pagesEl.appendChild(page);
+    dotsEl.appendChild(document.createElement("span"));
+  }
+  updateDots();
+}
+
+/* ---------- TAP LOGIC ----------
+   Tap 1: highlight + speak.  Tap 2: unhighlight (silent).  Tap 3: highlight + speak again.
+   A 3rd tile while 2 are lit: the oldest highlight drops off. */
+function speak(item) {
+  if (!item.speak || !("speechSynthesis" in window)) return;
+  const u = new SpeechSynthesisUtterance(item.word);
+  u.rate = 0.85;
+  speechSynthesis.speak(u);      // not cancelling, so two quick taps can both be heard
+}
+
+function toggle(tile) {
+  const id = tile.dataset.id;
+  if (active.includes(id)) {               // already on -> turn off silently
+    active = active.filter(x => x !== id);
+    tile.classList.remove("on");
+    return;
+  }
+  if (active.length >= MAX_ON) {           // full: ignore, a lit tile must be tapped off first
+    tile.classList.remove("nope");
+    void tile.offsetWidth;                 // restart the animation
+    tile.classList.add("nope");
+    return;
+  }
+  active.push(id);
+  tile.classList.add("on");
+  speak(ITEMS[id]);
+}
+
+/* Pointer events track each finger separately, so two simultaneous taps both work.
+   A touch that moves more than 10px is a swipe, not a tap. */
+const starts = new Map();
+pagesEl.addEventListener("pointerdown", e => {
+  starts.set(e.pointerId, { x: e.clientX, y: e.clientY, tile: e.target.closest(".tile") });
+});
+pagesEl.addEventListener("pointerup", e => {
+  const s = starts.get(e.pointerId); starts.delete(e.pointerId);
+  if (!s || !s.tile) return;
+  if (Math.hypot(e.clientX - s.x, e.clientY - s.y) < 10) toggle(s.tile);
+});
+pagesEl.addEventListener("pointercancel", e => starts.delete(e.pointerId));
+
+/* ---------- PAGE DOTS ---------- */
+function updateDots() {
+  const i = Math.round(pagesEl.scrollLeft / pagesEl.clientWidth);
+  [...dotsEl.children].forEach((d, k) => d.classList.toggle("cur", k === i));
+}
+pagesEl.addEventListener("scroll", () => requestAnimationFrame(updateDots));
+window.addEventListener("resize", updateDots);
+
+render();
+</script>
+</body>
+</html>
