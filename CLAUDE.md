@@ -118,6 +118,9 @@ Parents and therapists share a board across devices.
 - **Sign-in:** try first, sign in later. A parent can set up a board on the device without an account; sign-in is offered later for backup and sharing.
 - **Roles:** owner (parent), editor (therapist) and view-only (e.g. grandparents) are all needed.
 
+- **App name:** One Zen Baby (current working name).
+- **Starter list (24 items, in this order):** I want, Bath, Eat, Drink, Milk, Water, Juice, Snack, Play, Go Outside, Go Play, Go to Park, Take Nap, Cars, Animals, Puppies, Kitties, Grandma, Grandpa, Tablet, Phone, TV, Grocery Store, Swimming. "I want" pairs naturally with the 2-lit-tile limit (e.g. "I want" + "Juice").
+
 ## Open questions (ask the developer before building these parts)
-- The exact list of 16 to 24 starter items (developer will supply the list), and where the drawn and photo artwork comes from.
-- App name (developer has one in mind; not yet recorded) and domain (optional).
+- Where the drawn and photo artwork for the starter items comes from.
+- Domain (optional).

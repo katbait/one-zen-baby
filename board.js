@@ -20,19 +20,33 @@
      speak     - say it aloud when lit?
      audio     - optional URL of a recorded sound; played instead of the
                  device voice when present */
+// The developer's starter list (24 items = 6 full screens), in their order.
+// Emoji are placeholders until real drawings/photos are chosen.
 const ITEMS = [
-  { id: "apple",   word: "Apple",   emoji: "🍎" },
-  { id: "dog",     word: "Dog",     emoji: "🐶" },
-  { id: "ball",    word: "Ball",    emoji: "⚽" },
-  { id: "water",   word: "Water",   emoji: "💧" },
-  { id: "car",     word: "Car",     emoji: "🚗" },
-  { id: "book",    word: "Book",    emoji: "📖" },
-  { id: "cookie",  word: "Cookie",  emoji: "🍪" },
-  { id: "cat",     word: "Cat",     emoji: "🐱" },
-  { id: "music",   word: "Music",   emoji: "🎵" },
-  { id: "sleep",   word: "Sleep",   emoji: "😴" },
-  { id: "bath",    word: "Bath",    emoji: "🛁" },
-  { id: "outside", word: "Outside", emoji: "🌳" },
+  { id: "i-want",        word: "I want",        emoji: "🙋" },
+  { id: "bath",          word: "Bath",          emoji: "🛁" },
+  { id: "eat",           word: "Eat",           emoji: "🍽️" },
+  { id: "drink",         word: "Drink",         emoji: "🥤" },
+  { id: "milk",          word: "Milk",          emoji: "🥛" },
+  { id: "water",         word: "Water",         emoji: "💧" },
+  { id: "juice",         word: "Juice",         emoji: "🧃" },
+  { id: "snack",         word: "Snack",         emoji: "🍪" },
+  { id: "play",          word: "Play",          emoji: "🧸" },
+  { id: "go-outside",    word: "Go Outside",    emoji: "🌳" },
+  { id: "go-play",       word: "Go Play",       emoji: "⚽" },
+  { id: "go-to-park",    word: "Go to Park",    emoji: "🏞️" },
+  { id: "take-nap",      word: "Take Nap",      emoji: "😴" },
+  { id: "cars",          word: "Cars",          emoji: "🚗" },
+  { id: "animals",       word: "Animals",       emoji: "🦁" },
+  { id: "puppies",       word: "Puppies",       emoji: "🐶" },
+  { id: "kitties",       word: "Kitties",       emoji: "🐱" },
+  { id: "grandma",       word: "Grandma",       emoji: "👵" },
+  { id: "grandpa",       word: "Grandpa",       emoji: "👴" },
+  { id: "tablet",        word: "Tablet",        emoji: "💻" },  // no tablet emoji exists; placeholder
+  { id: "phone",         word: "Phone",         emoji: "📱" },
+  { id: "tv",            word: "TV",            emoji: "📺" },
+  { id: "grocery-store", word: "Grocery Store", emoji: "🛒" },
+  { id: "swimming",      word: "Swimming",      emoji: "🏊" },
 ].map(item => ({ showWord: true, speak: true, ...item }));   // fill in defaults
 // (`...item` copies the item's own fields last, so they override the defaults.)
 
