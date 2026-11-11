@@ -112,10 +112,12 @@ Parents and therapists share a board across devices.
 - iOS can clear a website's stored data after about 7 days of non-use; installed home-screen apps are exempt.
 - Keep the browser updated on the developer's Windows 10 machine, since the OS is end-of-support.
 
+## Decisions (answered by the developer, Nov 2026)
+- **Partial last screen:** require full screens. Tile counts must be multiples of 4 (4, 8, 12 ... 40).
+- **Landscape layout:** 2x2 (same as portrait).
+- **Sign-in:** try first, sign in later. A parent can set up a board on the device without an account; sign-in is offered later for backup and sharing.
+- **Roles:** owner (parent), editor (therapist) and view-only (e.g. grandparents) are all needed.
+
 ## Open questions (ask the developer before building these parts)
-- The exact list of 16 to 24 starter items, and where the drawn and photo artwork comes from.
-- What happens when the total does not fill the last screen (for example 6 tiles = 4 + 2)? Require full screens, or allow empty slots?
-- Landscape layout: 2x2 or 4 across?
-- Sign-in first, or let a parent try the wizard before creating an account?
-- Whether a view-only role is needed for therapists or grandparents.
-- App name and domain (optional).
+- The exact list of 16 to 24 starter items (developer will supply the list), and where the drawn and photo artwork comes from.
+- App name (developer has one in mind; not yet recorded) and domain (optional).
