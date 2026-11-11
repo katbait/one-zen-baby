@@ -52,11 +52,10 @@ const ITEMS = [
 
 /* ---------- SETTINGS (fixed by design, not parent options) ---------- */
 const PER_PAGE = 4;    // tiles per screen
-const MAX_LIT  = 2;    // at most 2 tiles highlighted at once
+const MAX_LIT  = 2;    // at most 2 tiles highlighted per screen
 const SWIPE_PX = 10;   // a touch that moves farther than this is a swipe, not a tap
 
 /* ---------- STATE ---------- */
-let litIds = [];        // ids of currently lit tiles
 let currentPage = 0;    // which screen is showing (0 = first)
 
 const itemsById = new Map(ITEMS.map(item => [item.id, item]));  // quick lookup by id
@@ -121,21 +120,26 @@ function makeTile(item) {
    2. TAP RULES (confirmed by the client)
    - Tap an unlit tile: it lights up and speaks.
    - Tap a lit tile: it turns off, silently.
-   - If 2 tiles are already lit, tapping a 3rd is ignored (it gives a
-     small shake). A lit tile must be tapped off first.
+   - EACH SCREEN IS SEPARATE: up to 2 tiles can be lit on every screen.
+     Lit tiles on other screens stay lit and don't count here.
+   - If 2 tiles on this screen are already lit, tapping a 3rd one on this
+     screen is ignored (small shake). A lit tile must be tapped off first.
+   We don't keep a separate list of lit tiles: the "on" CSS class on each
+   tile is the record, and we count the lit tiles inside this tile's screen.
    ============================================================ */
 function onTileTap(tile) {
-  const id = tile.dataset.id;
-
   // Already lit -> turn it off, no sound.
-  if (litIds.includes(id)) {
-    litIds = litIds.filter(x => x !== id);
+  if (tile.classList.contains("on")) {
     tile.classList.remove("on");
     return;
   }
 
-  // Two already lit -> ignore, but shake so the child sees the tap was noticed.
-  if (litIds.length >= MAX_LIT) {
+  // How many tiles are lit on THIS screen only?
+  const screen = tile.closest(".page");
+  const litOnThisScreen = screen.querySelectorAll(".tile.on").length;
+
+  // Two already lit here -> ignore, but shake so the child sees the tap was noticed.
+  if (litOnThisScreen >= MAX_LIT) {
     tile.classList.remove("nope");
     void tile.offsetWidth;   // trick: forces the browser to notice the class was removed, so the shake can replay
     tile.classList.add("nope");
@@ -143,9 +147,8 @@ function onTileTap(tile) {
   }
 
   // Otherwise light it up and say it.
-  litIds.push(id);
   tile.classList.add("on");
-  sayItem(itemsById.get(id));
+  sayItem(itemsById.get(tile.dataset.id));
 }
 
 // Play the item's recorded sound if it has one, otherwise use the device voice.

@@ -29,7 +29,7 @@ Backend-focused (Python), completed a bootcamp in 2020, and has not used JavaScr
 - Tap 1: tile highlights and speaks and/or plays its sound.
 - Tap 2 on a lit tile: unhighlights, **silently**.
 - Tap 3: highlights and speaks again.
-- **At most 2 tiles lit at once.** If 2 are lit and the child taps a third, the tap is **ignored** (a small shake shows it was noticed). The third tile only works after a lit tile is tapped off. This may need a parent's help, which is intended.
+- **At most 2 tiles lit per screen.** Each 4-tile screen is independent: a child can pick 2 on one screen, swipe, and pick 2 on another, and the earlier screens stay lit. If 2 are lit on a screen and the child taps a third on that same screen, the tap is **ignored** (a small shake shows it was noticed). The third tile only works after a lit tile on that screen is tapped off. This may need a parent's help, which is intended.
 - Two fingers can tap two tiles at the same time. Use pointer events and track each pointer separately.
 - A touch that moves more than about 10px is a swipe, not a tap.
 
@@ -69,8 +69,18 @@ A parent can keep several named boards and switch between them in parent mode. E
 - Sign-in comes first: **Sign in with Google** or **create an account with email and password** (email, not a username, so forgotten passwords can be reset). An email account works on any device the person signs in on.
 - Children's photos and voices are the most sensitive part. Make privacy visible and simple.
 
-## Drag-and-drop note
-Dragging across swipeable pages on a touch screen is tricky and can fight with swipe scrolling. Suggested approach: a dedicated **reorder view** showing all screens at once as rows of 4 tiles; long-press a tile to pick it up and drop it anywhere, including a different row. Ask before adding a library (e.g. SortableJS); plain pointer events may be enough.
+## Drag-and-drop (arrange step and parent edit area)
+**Requirement from the developer:** works like rearranging apps on a phone home screen. In parent mode, press and hold a tile to pick it up, drag it (dragging to the right or left edge flips to the next or previous screen), and drop it on any tile on any screen. **The two tiles swap places** (e.g. tile 1 on screen 1 dropped on tile 1 of screen 3: they trade spots). This lets a parent or therapist customize every screen.
+Implementation note: dragging across swipeable pages on a touch screen can fight with swipe scrolling, so in parent mode turn off normal swiping while a tile is held, and flip pages when the dragged tile is held near an edge. Ask before adding a library (e.g. SortableJS); plain pointer events should be enough.
+
+## Voice choice (in setup and in settings)
+- One simple choice for the whole board: **device voice for all words** (the default; tell the parent it is the easiest and can be changed any time in settings) or **my own voice for all words**.
+- If "my own voice" is chosen during setup, prompt the parent to record each word on the board, one at a time.
+- If they switch to "my own voice" later in settings, prompt them then to record every word that has no recording yet (including words added later).
+- Details still to discuss with the developer (e.g. mixing per tile, re-recording one word).
+
+## Own tiles
+A parent picks which starter items to use (e.g. 16 of 24) and can add their own tiles: a picture (photo or drawn/cartoon image) plus a typed word, with the device voice or their own recording.
 
 ## Starter art assets
 Two matching sets are needed for every starter item: **drawn illustrations** and **real photos** (16 to 24 items each, so roughly 32 to 48 images). Choose things very young children recognize (food, drinks, toys, animals, daily routines). Licensing matters if the app is shared beyond the first client: use images with clear permission for this use, or original or commissioned art. Emoji are placeholders until real art is chosen.
