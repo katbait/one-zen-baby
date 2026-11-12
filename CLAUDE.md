@@ -143,6 +143,10 @@ Parents and therapists share a board across devices.
 - `js/app.js` startup; `js/starter.js` starter words; `js/model.js` board rules; `js/storage.js` the only file that saves/loads (localStorage for board JSON now; IndexedDB blobs in step 3; Firebase in step 5); `js/pages.js` builds 4-tile screens; `js/child.js` child board, tap rules, gate; `js/parent.js` wizard, parent menu, boards; `js/arrange.js` hold-drag-swap; `js/views.js` switches views; `js/media.js` photo/recording URLs and photo shrinking; `js/speech.js` plays recordings or the built-in voice; `js/recorder.js` microphone recording.
 - Photos and recordings are stored in IndexedDB (via `storage.js` `saveBlob`/`getBlob`/`deleteBlob`); boards keep only `imageRef`/`audioRef`.
 - Recording on a phone needs HTTPS (works on desktop at http://localhost).
+- **Installable / offline (step 4):** `manifest.json` (name, icons, colors, standalone), `sw.js` service worker, `js/install.js` (registers the service worker; "Add to home screen" button in the parent menu on Chrome/Edge, Share-menu instructions on iPhone/iPad; Chrome's automatic install pop-up is suppressed so it never appears over the child board).
+- `sw.js` is **network first**: always fetches fresh files when online (so code changes show immediately), falls back to saved copies offline or after 3 seconds. **When adding a new file to the app, add it to `APP_FILES` in `sw.js`** (a missing listed file breaks offline install). Bump `CACHE_NAME` to clear old copies.
+- Icons in `icons/` are original artwork (2x2 board, two lit tiles); `icon.svg` / `icon-maskable.svg` are the sources for the PNGs.
+- The first saved photo/recording asks the browser for persistent storage (`navigator.storage.persist()`), so it isn't cleared when space runs low.
 - JS files are ES modules, so the app must be opened through `python -m http.server`, not by double-clicking.
 
 ## Open questions (ask the developer before building these parts)

@@ -27,6 +27,7 @@ import { showArrange } from "./arrange.js";
 import { withMedia, boardTiles, mediaUrl, deleteMedia, deleteBoardMedia, resizeImage } from "./media.js";
 import { speakWord, playUrl, stopSpeaking } from "./speech.js";
 import { startRecording, canRecord, micErrorMessage } from "./recorder.js";
+import { isInstalled, canPromptInstall, isIos, promptInstall } from "./install.js";
 
 const el = document.getElementById("parent-view");
 
@@ -461,18 +462,25 @@ function updateRecorderUi(message) {
      :           "Not recorded: the built-in voice will say it.");
 }
 
+let recStarting = false; // true while the microphone is switching on (can take a moment)
+
 async function toggleRecording() {
   if (activeRec) {                       // second tap: stop
     activeRec.stop();
     return;
   }
+  if (recStarting) return;               // already starting: ignore extra taps
   stopSpeaking();
+  recStarting = true;
+  updateRecorderUi("Starting the microphone…");
   let rec;
   try {
     rec = await startRecording();
   } catch (err) {
     updateRecorderUi(micErrorMessage(err));
     return;
+  } finally {
+    recStarting = false;
   }
   activeRec = rec;
   const target = recTarget;              // remember it, in case the screen changes
@@ -631,6 +639,7 @@ async function showMenu({ renaming = false } = {}) {
         <button class="btn" data-action="new-board">+ New board</button>
         ${boards.length > 1 ? `<button class="btn danger" data-action="delete-board">Delete this board</button>` : ""}
       </div>
+      ${installHtml()}
       <p class="privacy">🔒 Everything is saved on this device only.</p>
     </main>`;
 
@@ -639,6 +648,23 @@ async function showMenu({ renaming = false } = {}) {
     input.focus();
     input.select();
   }
+}
+
+/** "Add to home screen": a button where the browser allows one (Android/PC
+    Chrome and Edge), instructions on iPhone/iPad, nothing once installed. */
+function installHtml() {
+  if (isInstalled()) return "";
+  const why = "It opens full screen, works offline, and keeps your photos and recordings safe.";
+  if (canPromptInstall()) {
+    return `<h2>This device</h2>
+            <p class="note">${why}</p>
+            <button class="btn" data-action="install">📲 Add to home screen</button>`;
+  }
+  if (isIos()) {
+    return `<h2>This device</h2>
+            <p class="note">${why} To add it: tap the Share button, then “Add to Home Screen”.</p>`;
+  }
+  return "";
 }
 
 function editStep(key) {
@@ -762,6 +788,7 @@ const actions = {
   "use-board":    async btn => { await storage.setCurrentBoardId(btn.dataset.id); await showMenu(); },
   "new-board":    startNewBoard,
   "delete-board": deleteCurrentBoard,
+  "install":      async () => { await promptInstall(); await showMenu(); },
 };
 
 // One listener for every button in parent mode.

@@ -9,6 +9,10 @@ import { boardTiles } from "./media.js";
 import * as storage from "./storage.js";
 import { showChildBoard, setParentOpener } from "./child.js";
 import { startSetup, openParentMenu } from "./parent.js";
+import { registerServiceWorker } from "./install.js";
+
+// Offline support (see sw.js).
+registerServiceWorker();
 
 // Block the long-press menu everywhere except text boxes (where it's needed for paste).
 document.addEventListener("contextmenu", e => {

@@ -103,8 +103,22 @@ async function runRequest(mode, makeRequest) {
   });
 }
 
+/** Ask the browser not to clear our data when the device is low on space.
+    (Browsers may delete website data to free up room unless it's marked
+    "persistent". Chrome decides quietly; nothing pops up.) Done once, the
+    first time a photo or recording is saved. */
+let askedToPersist = false;
+function askToKeepData() {
+  if (askedToPersist) return;
+  askedToPersist = true;
+  if (navigator.storage && navigator.storage.persist) {
+    navigator.storage.persist().catch(() => {});
+  }
+}
+
 /** Save a file; returns its ref (a short id string). */
 export async function saveBlob(blob) {
+  askToKeepData();
   const ref = "f" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
   const record = { type: blob.type, data: await blob.arrayBuffer() };
   await runRequest("readwrite", store => store.put(record, ref));
