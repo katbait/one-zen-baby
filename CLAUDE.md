@@ -129,7 +129,8 @@ Parents and therapists share a board across devices.
 - **Roles:** owner (parent), editor (therapist) and view-only (e.g. grandparents) are all needed.
 
 - **App name:** One Zen Baby (current working name).
-- **Starter list (24 items, in this order):** I want, Bath, Eat, Drink, Milk, Water, Juice, Snack, Play, Go Outside, Go Play, Go to Park, Take Nap, Cars, Animals, Puppies, Kitties, Grandma, Grandpa, Tablet, Phone, TV, Grocery Store, Swimming. "I want" pairs naturally with the 2-lit-tile limit (e.g. "I want" + "Juice").
+- **Starter list (24 items, in this order, revised Nov 2026):** I want to, Take a Bath, Eat, Drink, Drink Milk, Drink Water, We are going to, The Grocery Store, Play, Go Outside, Go Play, Go to Park, Take Nap, Ride in the Car, Animals, Puppy, Get dressed, See Grandma, See Grandpa, Tablet, Music, Watch TV, Store, Go to Bed. Two phrase starters ("I want to", "We are going to") pair with the 2-lit-tile limit to make short sentences (e.g. "I want to" + "Eat", "We are going to" + "The Grocery Store"); wording was chosen so these pairs read naturally.
+- **Changing the starter list:** edit `js/starter.js` and push. Same `id` = rename (updates boards already using it); new `id` = a different word. Removed words vanish from the Words step, but stay on boards that are still using them until the parent switches them off (`syncStarters` in `model.js`). A parent's recording of a renamed word still says the old word.
 
 - **Parent gate:** press and hold the small ⚙️ button (bottom right of the child board) for 2 seconds; a quick tap shows "Hold to open". Chosen over a PIN (nothing to forget). Easy to change.
 - **Wizard order as built:** Pictures, Words, Your own pictures, Voice, Preview?, Arrange, then the child board. Words start unselected.

@@ -52,16 +52,28 @@ export function enabledItems(board) {
 
 /** Keep a saved board's built-in items in step with starter.js
     (adds new starter words; updates their word/emoji if we changed them). */
-function syncStarters(board) {
-  for (const starter of STARTER_ITEMS) {
+export function syncStarters(board) {
+  const starterIds = new Set(STARTER_ITEMS.map(s => s.id));
+
+  // 1. Every current starter word, in starter.js order (new ones added, switched off).
+  const starters = STARTER_ITEMS.map(starter => {
     const existing = board.items.find(item => item.id === starter.id);
-    if (existing) {
-      existing.word = starter.word;
-      existing.emoji = starter.emoji;
-    } else {
-      board.items.push({ ...starter, showWord: true, speak: true, builtIn: true });
-    }
-  }
+    if (!existing) return { ...starter, showWord: true, speak: true, builtIn: true };
+    existing.word = starter.word;
+    existing.emoji = starter.emoji;
+    return existing;
+  });
+
+  // 2. Old starter words that were removed from starter.js: keep them only if
+  //    this board is still using them (so no child loses a tile unexpectedly).
+  //    Once the parent switches one off, it's gone for good.
+  const retired = board.items.filter(item =>
+    item.builtIn && !starterIds.has(item.id) && board.enabled.includes(item.id));
+
+  // 3. The parent's own pictures, unchanged, at the end.
+  const own = board.items.filter(item => !item.builtIn);
+
+  board.items = [...starters, ...retired, ...own];
 }
 
 /** The board the child should see (or null if there are none yet). */
