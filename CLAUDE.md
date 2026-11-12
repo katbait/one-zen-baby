@@ -149,6 +149,13 @@ Parents and therapists share a board across devices.
 - The first saved photo/recording asks the browser for persistent storage (`navigator.storage.persist()`), so it isn't cleared when space runs low.
 - JS files are ES modules, so the app must be opened through `python -m http.server`, not by double-clicking.
 
+## Hosting (set up Nov 2026)
+- Public GitHub repo **katbait/one-zen-baby**, served by **GitHub Pages** from the `main` branch root: https://katbait.github.io/one-zen-baby/
+- **Publishing = pushing to `main`.** Every `git push` updates the live site within a minute or two. Commit and push only when the developer asks.
+- The repo is public (required for free GitHub Pages). Commits use the GitHub noreply address `78621138+katbait@users.noreply.github.com` (set in this repo's git config) so the developer's personal email is never published. Never put personal details in committed files.
+- GitHub CLI is installed at `C:\Program Files\GitHub CLI\gh.exe` (may not be on PATH in older shells). The `!` prompt in Claude Code runs bash, so use bash syntax there.
+- Children's photos and recordings never leave the device yet (no server until step 5), so the public site holds only code.
+
 ## Open questions (ask the developer before building these parts)
 - Where the drawn and photo artwork for the starter items comes from.
 - Domain (optional).
