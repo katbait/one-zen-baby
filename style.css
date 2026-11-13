@@ -138,7 +138,7 @@ button { font: inherit; cursor: pointer; }
   box-shadow: 0 0 0 6px rgba(255,210,63,.35), 0 0 36px 8px rgba(255,210,63,.55);
 }
 
-/* Small shake when a 3rd tile is tapped while 2 are already lit on that screen. */
+/* Small shake when a tile is tapped while that screen already has the most lit tiles allowed (3). */
 .tile.nope { animation: nope .25s ease; }
 @keyframes nope {
   25% { transform: translateX(-6px); }

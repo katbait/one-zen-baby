@@ -1,6 +1,7 @@
 /* ============================================================
    The built-in starter words (the developer's list, in order).
-   24 items = 6 full screens of 4.
+   34 items for now. A board holds at most 36 tiles (9 screens of 4),
+   counting starter words and the parent's own pictures together.
    `emoji` is a placeholder picture until real drawings and photos are
    chosen. Later each item will also get drawn/photo image files, and
    the board's "picture style" setting will pick between them.
@@ -25,17 +26,28 @@ export const STARTER_ITEMS = [
   { id: "play",              word: "Play",              emoji: "🧸" },
   { id: "go-outside",        word: "Go Outside",        emoji: "🌳" },
   { id: "go-play",           word: "Go Play",           emoji: "⚽" },
-  { id: "go-to-park",        word: "Go to Park",        emoji: "🏞️" },
-  { id: "take-nap",          word: "Take Nap",          emoji: "😴" },
+  { id: "go-to-park",        word: "Go to Playground",  emoji: "🛝" },  // slide; newer emoji, may not show on Windows 10
+  { id: "take-nap",          word: "Go to Sleep",       emoji: "😴" },
   { id: "cars",              word: "Ride in the Car",   emoji: "🚗" },
   { id: "animals",           word: "Animals",           emoji: "🦁" },
-  { id: "puppies",           word: "Puppy",             emoji: "🐶" },
+  { id: "more",              word: "More",              emoji: "➕" },
   { id: "get-dressed",       word: "Get dressed",       emoji: "👕" },
-  { id: "grandma",           word: "See Grandma",       emoji: "👵" },
-  { id: "grandpa",           word: "See Grandpa",       emoji: "👴" },
+  { id: "clean-up",          word: "Clean up",          emoji: "🧹" },
+  { id: "i-am",              word: "I am",              emoji: "🧒" },
   { id: "tablet",            word: "Tablet",            emoji: "💻" },  // no tablet emoji exists; placeholder
   { id: "music",             word: "Music",             emoji: "🎵" },
   { id: "tv",                word: "Watch TV",          emoji: "📺" },
   { id: "store",             word: "Store",             emoji: "🛍️" },
-  { id: "go-to-bed",         word: "Go to Bed",         emoji: "🛏️" },
+  { id: "all-done",          word: "All done",          emoji: "🙌" },
+  // Feelings and short words (pair with "I am": "I am" + "Hungry")
+  { id: "ready",             word: "Ready",             emoji: "👍" },
+  { id: "cold",              word: "Cold",              emoji: "🥶" },
+  { id: "hot",               word: "Hot",               emoji: "🥵" },
+  { id: "hungry",            word: "Hungry",            emoji: "😋" },
+  { id: "tired",             word: "Tired",             emoji: "🥱" },
+  { id: "sad",               word: "Sad",               emoji: "😢" },
+  { id: "frustrated",        word: "Frustrated",        emoji: "😤" },
+  { id: "happy",             word: "Happy",             emoji: "😊" },
+  { id: "mad",               word: "Mad",               emoji: "😠" },
+  { id: "stop",              word: "Stop",              emoji: "✋" },
 ];

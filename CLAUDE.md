@@ -29,7 +29,8 @@ Backend-focused (Python), completed a bootcamp in 2020, and has not used JavaScr
 - Tap 1: tile highlights and speaks and/or plays its sound.
 - Tap 2 on a lit tile: unhighlights, **silently**.
 - Tap 3: highlights and speaks again.
-- **At most 2 tiles lit per screen.** Each 4-tile screen is independent: a child can pick 2 on one screen, swipe, and pick 2 on another, and the earlier screens stay lit. If 2 are lit on a screen and the child taps a third on that same screen, the tap is **ignored** (a small shake shows it was noticed). The third tile only works after a lit tile on that screen is tapped off. This may need a parent's help, which is intended.
+- **At most 3 tiles lit per screen** (changed from 2 in Nov 2026 after the client tested it; `MAX_LIT` in `child.js`). Each 4-tile screen is independent: a child can pick 3 on one screen, swipe, and pick 3 on another, and the earlier screens stay lit. If 3 are lit on a screen and the child taps the 4th on that same screen, the tap is **ignored** (a small shake shows it was noticed). It only works after a lit tile on that screen is tapped off. This may need a parent's help, which is intended.
+- Each tile speaks only when tapped. There is no "say the whole sentence" button (developer decision, Nov 2026).
 - Two fingers can tap two tiles at the same time. Use pointer events and track each pointer separately.
 - A touch that moves more than about 10px is a swipe, not a tap.
 
@@ -58,10 +59,10 @@ One decision per screen. Parents can return to any step later and change it.
 5. **Arrange:** drag and drop to reorder tiles within and across screens, like reordering a video queue.
 6. **Done**, then child mode.
 
-Limits: at most **40 tiles total per board (10 screens of 4)**, counting starter and own tiles together.
+Limits: at most **36 tiles total per board (9 screens of 4)**, counting starter and own tiles together (`MAX_TILES` in `model.js`; was 40).
 
 ## Multiple boards
-A parent can keep several named boards and switch between them in parent mode. Example: a family without a beach normally hides the beach tile, but makes a "Vacation" board that includes it plus their own beach photos. Each board mixes starter and own tiles up to the 40-tile limit. Boards are saved per account and sync across devices.
+A parent can keep several named boards and switch between them in parent mode. Example: a family without a beach normally hides the beach tile, but makes a "Vacation" board that includes it plus their own beach photos. Each board mixes starter and own tiles up to the 36-tile limit. Boards are saved per account and sync across devices.
 
 ## Layout and screens
 - **Landscape is the primary orientation** (wider than tall); portrait must work too. Each screen shows 4 tiles either way. Try both 2x2 and 4-across on real devices and keep whichever feels better.
@@ -123,13 +124,13 @@ Parents and therapists share a board across devices.
 - Keep the browser updated on the developer's Windows 10 machine, since the OS is end-of-support.
 
 ## Decisions (answered by the developer, Nov 2026)
-- **Partial last screen:** require full screens. Tile counts must be multiples of 4 (4, 8, 12 ... 40).
+- **Partial last screen:** require full screens. Tile counts must be multiples of 4 (4, 8, 12 ... 36). (Developer is considering allowing blank spots on the last screen; see Open questions.)
 - **Landscape layout:** 2x2 (same as portrait).
 - **Sign-in:** try first, sign in later. A parent can set up a board on the device without an account; sign-in is offered later for backup and sharing.
 - **Roles:** owner (parent), editor (therapist) and view-only (e.g. grandparents) are all needed.
 
 - **App name:** One Zen Baby (current working name).
-- **Starter list (24 items, in this order, revised Nov 2026):** I want to, Take a Bath, Eat, Drink, Drink Milk, Drink Water, We are going to, The Grocery Store, Play, Go Outside, Go Play, Go to Park, Take Nap, Ride in the Car, Animals, Puppy, Get dressed, See Grandma, See Grandpa, Tablet, Music, Watch TV, Store, Go to Bed. Two phrase starters ("I want to", "We are going to") pair with the 2-lit-tile limit to make short sentences (e.g. "I want to" + "Eat", "We are going to" + "The Grocery Store"); wording was chosen so these pairs read naturally.
+- **Starter list (34 items, revised Nov 2026; order may still change):** I want to, Take a Bath, Eat, Drink, Drink Milk, Drink Water, We are going to, The Grocery Store, Play, Go Outside, Go Play, Go to Playground, Go to Sleep, Ride in the Car, Animals, More, Get dressed, Clean up, I am, Tablet, Music, Watch TV, Store, All done, Ready, Cold, Hot, Hungry, Tired, Sad, Frustrated, Happy, Mad, Stop. Phrase starters ("I want to", "We are going to", "I am") combine with up to 3 lit tiles per screen to make short sentences (e.g. "I am" + "Hungry"). Some pairs may read oddly; that's accepted for now, essential words come first.
 - **Changing the starter list:** edit `js/starter.js` and push. Same `id` = rename (updates boards already using it); new `id` = a different word. Removed words vanish from the Words step, but stay on boards that are still using them until the parent switches them off (`syncStarters` in `model.js`). A parent's recording of a renamed word still says the old word.
 
 - **Parent gate:** press and hold the small ⚙️ button (bottom right of the child board) for 2 seconds; a quick tap shows "Hold to open". Chosen over a PIN (nothing to forget). Easy to change.
@@ -157,6 +158,11 @@ Parents and therapists share a board across devices.
 - GitHub CLI is installed at `C:\Program Files\GitHub CLI\gh.exe` (may not be on PATH in older shells). The `!` prompt in Claude Code runs bash, so use bash syntax there.
 - Children's photos and recordings never leave the device yet (no server until step 5), so the public site holds only code.
 
+## Future ideas (not now)
+- **Levels / stages 2, 3, 4+:** as children grow, a follow-on app per level that builds on this one, each its own app. Keep this app (level 1) as simple as it is now.
+
 ## Open questions (ask the developer before building these parts)
+- Blank spots: should a board be allowed to end with an unfilled last screen (e.g. 34 words = 8 full screens + 2 blank spots), or must every screen stay full? Also whether the developer will add 2 more starter words to reach 36.
+- Instructions for parents: one short welcome screen at the start of setup vs pop-ups or a click-through tutorial (the testing lesson above warns against tutorials/pop-ups). Includes a new app description: basic starter words and phrases for children learning words and 2 to 4 word sentences, including non-verbal children; parents can keep it simple with the starter words or add their own (family, babysitter, places, favorite toys, foods, actions) now or later.
 - Where the drawn and photo artwork for the starter items comes from.
 - Domain (optional).

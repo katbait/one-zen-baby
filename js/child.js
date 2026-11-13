@@ -10,7 +10,7 @@ import { createPager } from "./pages.js";
 import { showView } from "./views.js";
 import { sayItem, stopSpeaking } from "./speech.js";
 
-const MAX_LIT = 2;               // at most 2 tiles lit per screen
+const MAX_LIT = 3;               // at most 3 tiles lit per screen (client asked for 3, Nov 2026)
 const SWIPE_PX = 10;             // a touch that moves farther than this is a swipe, not a tap
 const HOLD_TO_OPEN_MS = 2000;    // how long to hold ⚙️ to open parent mode
 
@@ -46,9 +46,9 @@ export function showChildBoard(items, { preview = false, onExit = null } = {}) {
    1. TAP RULES (confirmed by the client)
    - Tap an unlit tile: it lights up and speaks.
    - Tap a lit tile: it turns off, silently.
-   - EACH SCREEN IS SEPARATE: up to 2 tiles can be lit on every screen.
-     Lit tiles on other screens stay lit and don't count here.
-   - If 2 tiles on this screen are already lit, tapping a 3rd one on this
+   - EACH SCREEN IS SEPARATE: up to MAX_LIT (3) tiles can be lit on every
+     screen. Lit tiles on other screens stay lit and don't count here.
+   - If 3 tiles on this screen are already lit, tapping the 4th one on this
      screen is ignored (small shake). A lit tile must be tapped off first.
    We don't keep a separate list of lit tiles: the "on" CSS class on each
    tile is the record, and we count the lit tiles inside this tile's screen.
@@ -64,7 +64,7 @@ function onTileTap(tile) {
   const screen = tile.closest(".page");
   const litOnThisScreen = screen.querySelectorAll(".tile.on").length;
 
-  // Two already lit here -> ignore, but shake so the child sees the tap was noticed.
+  // Already at the limit here -> ignore, but shake so the child sees the tap was noticed.
   if (litOnThisScreen >= MAX_LIT) {
     tile.classList.remove("nope");
     void tile.offsetWidth;   // trick: forces the browser to notice the class was removed, so the shake can replay

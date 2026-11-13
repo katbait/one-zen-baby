@@ -18,7 +18,7 @@ import { STARTER_ITEMS } from "./starter.js";
 import * as storage from "./storage.js";
 
 export const PER_PAGE  = 4;    // tiles per screen (fixed by design)
-export const MAX_TILES = 40;   // 10 screens of 4
+export const MAX_TILES = 36;   // 9 screens of 4
 
 /** A short unique id, e.g. "blq3x9k2ab1". */
 export function makeId() {
