@@ -20,7 +20,8 @@
    (at the bottom) looks up that action in the `actions` table.
    ============================================================ */
 import * as storage from "./storage.js";
-import { newBoard, enabledItems, loadCurrentBoard, isValidCount, makeId, PER_PAGE, MAX_TILES } from "./model.js";
+import { newBoard, enabledItems, loadCurrentBoard, isValidCount, makeId, PER_PAGE, MAX_TILES,
+         wordCount, blanksNeeded, normalizeBlanks, isBlankId, addToBoard } from "./model.js";
 import { showView } from "./views.js";
 import { showChildBoard } from "./child.js";
 import { showArrange } from "./arrange.js";
@@ -46,7 +47,11 @@ export function startSetup(theBoard, prevBoardId = null) {
   board = theBoard;
   mode = "setup";
   previousBoardId = prevBoardId;
-  goStep(0);
+  stepIndex = 0;
+  // The very first time (no other board yet): start with the welcome screen.
+  // When making an extra board, the parent has seen it already.
+  if (prevBoardId) goStep(0);
+  else showWelcome();
 }
 
 export async function openParentMenu() {
@@ -70,6 +75,7 @@ function stepLabel() {
 
 /** Save, then go to the next step (setup) or back to the menu (edit). */
 async function finishStep() {
+  normalizeBlanks(board);
   await storage.saveBoard(board);
   if (mode === "setup") return goStep(stepIndex + 1);
 
@@ -77,7 +83,7 @@ async function finishStep() {
   // that have no recording yet, ask them to record those now.
   const key = STEPS[stepIndex];
   if (board.voice === "own" && (key === "words" || key === "own")) {
-    const missing = enabledItems(board).filter(item => !item.audioRef).map(item => item.id);
+    const missing = enabledItems(board).filter(item => !item.blank && !item.audioRef).map(item => item.id);
     if (missing.length) return startVoiceWalk(missing, { onDone: showMenu, onBack: showMenu });
   }
   await showMenu();
@@ -115,13 +121,13 @@ function esc(text) {
 }
 
 /** Draw a standard wizard screen: Back + step label, title, body, optional footer. */
-function screen({ title, sub = "", body = "", footer = "", backAction = "back" }) {
+function screen({ title, sub = "", body = "", footer = "", backAction = "back", label = stepLabel(), back = null }) {
   cancelRecording();                              // leaving a screen stops any recording
-  const showBack = mode === "edit" || stepIndex > 0 || previousBoardId;
+  const showBack = back !== null ? back : (mode === "edit" || stepIndex > 0 || previousBoardId);
   el.innerHTML = `
     <header class="bar">
       ${showBack ? `<button class="btn-back" data-action="${backAction}">‹ Back</button>` : "<span></span>"}
-      <span class="step">${stepLabel()}</span>
+      <span class="step">${label}</span>
     </header>
     <main class="parent-body">
       <h1>${esc(title)}</h1>
@@ -212,15 +218,21 @@ const RENDER = {
     const own = board.items.filter(item => !item.builtIn);
 
     if (!own.length) {
-      const n = board.enabled.length;
-      const ok = isValidCount(n);
+      const n = wordCount(board);
+      const blanks = blanksNeeded(n);
+      let note = "";
+      if (n === 0) {
+        note = `<p class="note warn">You haven't chosen any words yet. Add your own pictures, or go back and choose some words.</p>`;
+      } else if (blanks) {
+        note = `<p class="note">${blankSpotsText(blanks)}</p>`;
+      }
       screen({
         title: "Add your own pictures?",
-        sub: "For example, a photo of your dog, Grandma, or a favorite food.",
+        sub: "For example, family members, the babysitter, places, favorite toys or foods.",
         body: choices([
           { action: "add-own", pic: "📸", label: "Yes" },
-          { action: "own-no",  pic: "👍", label: "No, not now", disabled: !ok },
-        ]) + (ok ? "" : `<p class="note warn">You have ${n} ${n === 1 ? "word" : "words"}. Each screen needs ${PER_PAGE}, so add your own pictures, or go back and change the words.</p>`),
+          { action: "own-no",  pic: "👍", label: "No, not now", disabled: n === 0 },
+        ]) + note,
       });
       return;
     }
@@ -287,31 +299,36 @@ const RENDER = {
   },
 };
 
-/** Update "8 chosen · 2 screens" and turn Next on/off.
-    Next needs full screens, except on the Words step during setup
+/** The friendly warning about blank spots, e.g. for 2 blanks. */
+function blankSpotsText(blanks) {
+  return `The last screen will have ${blanks} blank ${blanks === 1 ? "spot" : "spots"}. ` +
+         `You can move ${blanks === 1 ? "it" : "them"} to any screen in Arrange, or add more pictures to fill ${blanks === 1 ? "it" : "them"}.`;
+}
+
+/** Update "14 chosen · 4 screens" (plus the blank-spot warning) and turn Next on/off.
+    Next needs at least 1 picture, except on the Words step during setup
     (the parent may still add their own pictures). */
 function updateWordStatus() {
   const statusEl = document.getElementById("word-status");
   const nextBtn = el.querySelector('[data-action="next"]');
   if (!statusEl || !nextBtn) return;
 
-  const n = board.enabled.length;
+  const n = wordCount(board);
   const ok = isValidCount(n);
   const wordsInSetup = mode === "setup" && STEPS[stepIndex] === "words";
 
   let text;
   if (n === 0) {
     text = wordsInSetup ? "None chosen. That's fine if you'll use your own pictures." : "Tap pictures to choose them.";
-  } else if (ok) {
-    const screens = n / PER_PAGE;
-    text = `${n} chosen · ${screens} ${screens === 1 ? "screen" : "screens"} ✓`;
   } else {
-    const extra = n % PER_PAGE;            // tiles on the unfinished last screen
-    const need = PER_PAGE - extra;
-    text = `${n} chosen · ${need} more` + (n > PER_PAGE ? ` or ${extra} fewer` : "") + " to fill the screen";
+    const screens = Math.ceil(n / PER_PAGE);
+    const blanks = blanksNeeded(n);
+    text = `${n} chosen · ${screens} ${screens === 1 ? "screen" : "screens"}` +
+           (n >= MAX_TILES ? " (the most a board can hold)" : "") +
+           (blanks ? `. ${blankSpotsText(blanks)}` : " ✓");
   }
   statusEl.textContent = text;
-  statusEl.classList.toggle("ok", ok);
+  statusEl.classList.toggle("ok", ok && blanksNeeded(n) === 0);
   nextBtn.disabled = wordsInSetup ? n > MAX_TILES : !ok;
 }
 
@@ -389,7 +406,7 @@ async function saveOwn() {
     item = { id: "own-" + makeId(), word: "", imageRef: null, audioRef: null,
              showWord: true, speak: true, builtIn: false };
     board.items.push(item);
-    if (board.enabled.length < MAX_TILES) board.enabled.push(item.id);   // new pictures start switched on
+    if (wordCount(board) < MAX_TILES) addToBoard(board, item.id);   // new pictures start switched on
   }
   item.word = draft.word.trim();
 
@@ -416,6 +433,7 @@ async function deleteOwn(btn) {
   const item = draft.item;
   board.items = board.items.filter(i => i !== item);
   board.enabled = board.enabled.filter(id => id !== item.id);
+  normalizeBlanks(board);
   await deleteMedia(item.imageRef);
   await deleteMedia(item.audioRef);
   await storage.saveBoard(board);
@@ -584,6 +602,59 @@ async function showVoiceWalk() {
 
 
 /* ============================================================
+   WELCOME / HOW IT WORKS
+   One short screen of plain-language explanation (no pop-ups, no
+   click-through tutorial). Shown once before the very first setup, and
+   any time from the parent menu ("How it works").
+   ============================================================ */
+function showWelcome() {
+  const fromMenu = mode === "edit";
+  showView("parent-view");
+  screen({
+    title: fromMenu ? "How it works" : "Welcome to One Zen Baby",
+    label: "",
+    back: fromMenu,
+    body: `
+      <div class="welcome">
+        <p class="lead">A simple board of pictures that helps young children say what they want,
+           need and feel. It's made for children who are learning their first words and how to
+           put 2 to 4 words together into a sentence, including children who don't speak yet.</p>
+
+        <h2>How your child uses it</h2>
+        <ul>
+          <li>Each screen shows <b>4 pictures</b>. Swipe sideways to see the next screen (up to 9 screens).</li>
+          <li><b>Tap</b> a picture to light it up and hear it. <b>Tap again</b> to turn it off.</li>
+          <li>Up to <b>3 pictures</b> can light up on each screen, to build short sentences like
+              <i>"I want to" + "Eat"</i> or <i>"I am" + "Hungry"</i>.</li>
+          <li>Each screen works on its own: pictures lit on one screen stay lit when your child swipes to another.</li>
+        </ul>
+
+        <h2>Your choices</h2>
+        <ul>
+          <li><b>Keep it simple:</b> pick from our starter words. You can stop there.</li>
+          <li><b>Or add your own</b>, now or any time later: photos of family, the babysitter,
+              places you go, favorite toys, foods or activities, each with a word.</li>
+          <li>Words are said by the device's <b>built-in voice</b>, or you can record <b>your own voice</b>.</li>
+          <li>If your pictures don't fill the last screen, <b>1 to 3 blank spots</b> appear.
+              You can move them to any screen.</li>
+        </ul>
+
+        <h2>Changing things later</h2>
+        <ul>
+          <li><b>Press and hold the gear button</b> in the bottom corner for 2 seconds to open settings.
+              A quick tap does nothing, so your child can't change anything by accident.</li>
+        </ul>
+
+        <p class="privacy">🔒 Your photos and recordings stay on this device.</p>
+        <p class="note small-print">One Zen Baby is a communication aid. It is not a substitute for
+           speech therapy or medical advice.</p>
+      </div>`,
+    footer: `<button class="btn primary" data-action="welcome-done">${fromMenu ? "Done" : "Let's start"}</button>`,
+  });
+}
+
+
+/* ============================================================
    PARENT MENU (behind the ⚙️ gate)
    ============================================================ */
 const MENU_ITEMS = [
@@ -615,6 +686,9 @@ async function showMenu({ renaming = false } = {}) {
     </button>`).join("") + `
     <button class="menu-item" data-action="menu-preview">
       <span class="icon" aria-hidden="true">👀</span>Preview
+    </button>
+    <button class="menu-item" data-action="how-it-works">
+      <span class="icon" aria-hidden="true">💡</span>How it works
     </button>`;
 
   const boardRows = boards.map(b => b.id === board.id
@@ -714,8 +788,9 @@ const actions = {
     const id = btn.dataset.id;
     if (board.enabled.includes(id)) {
       board.enabled = board.enabled.filter(x => x !== id);
-    } else if (board.enabled.length < MAX_TILES) {
-      board.enabled.push(id);                // new words go at the end; Arrange can move them
+      normalizeBlanks(board);                // keep 0-3 blank spots so screens stay full
+    } else if (wordCount(board) < MAX_TILES) {
+      addToBoard(board, id);                 // new words go at the end (before blanks); Arrange can move them
     }
     const on = board.enabled.includes(id);
     btn.classList.toggle("on", on);
@@ -741,7 +816,9 @@ const actions = {
     board.voice = btn.dataset.value;
     if (board.voice === "own") {
       // Walk through every word on the board.
-      return startVoiceWalk(board.enabled.slice(), { onDone: finishStep, onBack: () => goStep(stepIndex) });
+      const words = board.enabled.filter(id => !isBlankId(id));
+      if (!words.length) return finishStep();      // nothing to record yet
+      return startVoiceWalk(words, { onDone: finishStep, onBack: () => goStep(stepIndex) });
     }
     const recorded = board.items.filter(item => item.audioRef).length;
     if (!recorded) return finishStep();
@@ -789,6 +866,8 @@ const actions = {
   "new-board":    startNewBoard,
   "delete-board": deleteCurrentBoard,
   "install":      async () => { await promptInstall(); await showMenu(); },
+  "how-it-works": showWelcome,
+  "welcome-done": () => (mode === "edit" ? showMenu() : goStep(0)),
 };
 
 // One listener for every button in parent mode.

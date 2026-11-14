@@ -54,6 +54,9 @@ export function showChildBoard(items, { preview = false, onExit = null } = {}) {
    tile is the record, and we count the lit tiles inside this tile's screen.
    ============================================================ */
 function onTileTap(tile) {
+  // Blank spots do nothing.
+  if (tile.classList.contains("blank")) return;
+
   // Already lit -> turn it off, no sound.
   if (tile.classList.contains("on")) {
     tile.classList.remove("on");

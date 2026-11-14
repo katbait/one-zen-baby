@@ -138,6 +138,12 @@ button { font: inherit; cursor: pointer; }
   box-shadow: 0 0 0 6px rgba(255,210,63,.35), 0 0 36px 8px rgba(255,210,63,.55);
 }
 
+/* Blank spot: a plain, soft beige square with nothing on it. */
+.tile.blank {
+  background: #e9dfca;
+  border-color: transparent;
+}
+
 /* Small shake when a tile is tapped while that screen already has the most lit tiles allowed (3). */
 .tile.nope { animation: nope .25s ease; }
 @keyframes nope {
@@ -445,6 +451,14 @@ button { font: inherit; cursor: pointer; }
 .parent-body h2 small { font-weight: 400; }
 .note.warn { color: #8a4b00; }
 .privacy { margin-top: 20px; font-size: 15px; color: var(--muted); }
+
+/* Welcome / How it works */
+.welcome { font-size: 17px; line-height: 1.5; }
+.welcome .lead { font-size: 18px; margin: 0 0 8px; }
+.welcome h2 { color: var(--ink); margin: 20px 0 6px; }
+.welcome ul { margin: 0; padding-left: 22px; }
+.welcome li { margin: 6px 0; }
+.small-print { font-size: 14px; }
 
 /* Recorder */
 .recorder { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }

@@ -9,8 +9,16 @@ import { PER_PAGE } from "./model.js";
 export function makeTile(item) {
   const tile = document.createElement("div");
   tile.className = "tile";
+  tile.dataset.id = item.id;
+
+  // A blank spot: an empty, plain tile (nothing to see, hear or tap).
+  if (item.blank) {
+    tile.classList.add("blank");
+    tile.setAttribute("aria-hidden", "true");
+    return tile;
+  }
+
   if (!item.showWord) tile.classList.add("no-word");
-  tile.dataset.id = item.id;                  // becomes the HTML attribute data-id="milk"
   tile.setAttribute("role", "button");        // tells screen readers it's tappable
   tile.setAttribute("aria-label", item.word);
 

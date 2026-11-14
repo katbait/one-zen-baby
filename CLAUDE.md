@@ -53,7 +53,7 @@ The developer, a parent who has been through this, tried several existing apps o
 ## Parent setup wizard (first run, after sign-in)
 One decision per screen. Parents can return to any step later and change it.
 1. **Picture style:** drawn illustrations or real photos (e.g. a photo of a plate of food). One tap.
-2. **Pick from the starter set:** show all 16 to 24 starter items in a grid, each with its word underneath. The parent selects how many and which. Counts should fill whole screens (4, 8, 12, ...).
+2. **Pick from the starter set:** show all starter items in a grid, each with its word underneath. The parent selects how many and which (blank spots fill any gap on the last screen).
 3. **"Add your own?"** Yes/No. If yes, a very simple screen: choose or take a photo, type the word, and the voice defaults to the device's text-to-speech with an optional "record my own voice" button. Repeat as many times as wanted.
 4. **"Preview?"** Yes (default) or No. Preview shows exactly what the child will see.
 5. **Arrange:** drag and drop to reorder tiles within and across screens, like reordering a video queue.
@@ -124,7 +124,7 @@ Parents and therapists share a board across devices.
 - Keep the browser updated on the developer's Windows 10 machine, since the OS is end-of-support.
 
 ## Decisions (answered by the developer, Nov 2026)
-- **Partial last screen:** require full screens. Tile counts must be multiples of 4 (4, 8, 12 ... 36). (Developer is considering allowing blank spots on the last screen; see Open questions.)
+- **Blank spots (Nov 2026, replaces "require full screens"):** a board can have any number of pictures from 1 to 36. If they don't fill the last screen, 1 to 3 **blank spots** fill it (e.g. 34 words = 8 full screens + a last screen with 2 blanks; 36 spots total at most). Blanks are plain soft-beige tiles with no picture or word; tapping one does nothing and they never count as lit. They start at the end, and the parent can drag them to any screen in Arrange. The Words and Your own pictures steps warn: "The last screen will have N blank spots. You can move them to any screen in Arrange, or add more pictures to fill them." Stored in `enabled` as `blank-1`, `blank-2`...; `normalizeBlanks()` / `addToBoard()` in `model.js` keep the count right (new words fill the first blank at the end; blanks the parent moved stay put).
 - **Landscape layout:** 2x2 (same as portrait).
 - **Sign-in:** try first, sign in later. A parent can set up a board on the device without an account; sign-in is offered later for backup and sharing.
 - **Roles:** owner (parent), editor (therapist) and view-only (e.g. grandparents) are all needed.
@@ -135,7 +135,8 @@ Parents and therapists share a board across devices.
 
 - **Parent gate:** press and hold the small ⚙️ button (bottom right of the child board) for 2 seconds; a quick tap shows "Hold to open". Chosen over a PIN (nothing to forget). Easy to change.
 - **Wizard order as built:** Pictures, Words, Your own pictures, Voice, Preview?, Arrange, then the child board. Words start unselected.
-- **Full-screens check:** during setup the Words step allows any number (even 0, since a parent may use all their own pictures); the check happens at the Your own pictures step. In edit mode, Save always needs full screens.
+- **Count check:** during setup the Words step allows any number (even 0, since a parent may use all their own pictures); "No, not now" on Your own pictures needs at least 1 picture. In edit mode, Save needs 1 to 36 pictures.
+- **Welcome / How it works (Nov 2026):** instead of pop-ups or a click-through tutorial, one plain-language screen before the very first setup (also in the parent menu as "How it works"): what the app is for (first words and 2-4 word sentences, including non-verbal children), 4 pictures per screen and up to 9 screens, tap / tap again, up to 3 lit per screen, keep it simple or add your own now or later, built-in or own voice, blank spots, hold the gear for settings, privacy, and "a communication aid, not a substitute for speech therapy or medical advice". Not shown again when making extra boards.
 - **Starter set vs own pictures:** the starter set is a basis that the owner (developer) can change in `js/starter.js` at any time. A parent can mix any starter words with their own pictures (photo or uploaded image + typed word), or use only their own (e.g. 24 of their own).
 - **Voice rule:** a word with a recording always plays the recording; otherwise the built-in voice says it. Choosing "My own voice" walks through every word on the board, one per screen (with "Finish later"). In edit mode with own voice, newly added words without a recording trigger the walk-through for just those. Switching back to the built-in voice asks "Keep your recordings?" (keep / remove). Recordings stop after 5 seconds.
 - **Own picture limits:** a photo and a word are required; the recording is optional. Photos are shrunk to 800px JPEG before saving.
@@ -162,7 +163,7 @@ Parents and therapists share a board across devices.
 - **Levels / stages 2, 3, 4+:** as children grow, a follow-on app per level that builds on this one, each its own app. Keep this app (level 1) as simple as it is now.
 
 ## Open questions (ask the developer before building these parts)
-- Blank spots: should a board be allowed to end with an unfilled last screen (e.g. 34 words = 8 full screens + 2 blank spots), or must every screen stay full? Also whether the developer will add 2 more starter words to reach 36.
-- Instructions for parents: one short welcome screen at the start of setup vs pop-ups or a click-through tutorial (the testing lesson above warns against tutorials/pop-ups). Includes a new app description: basic starter words and phrases for children learning words and 2 to 4 word sentences, including non-verbal children; parents can keep it simple with the starter words or add their own (family, babysitter, places, favorite toys, foods, actions) now or later.
+- Whether to add 2 more starter words (34 now; a board holds 36). Without them, choosing every starter word leaves 2 blank spots unless the parent adds 2 of their own.
+- The developer plans to reorder the starter list.
 - Where the drawn and photo artwork for the starter items comes from.
 - Domain (optional).

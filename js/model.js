@@ -9,7 +9,8 @@
      items:   [ { id, word, emoji, imageRef, audioRef, showWord, speak, builtIn }, ... ],
               // imageRef / audioRef: refs to photo / recording files (storage.js), or null.
               // Built-in items use emoji; parents' own items use imageRef.
-     enabled: [ "milk", "juice", ... ],   // ids shown on the board, in order
+     enabled: [ "milk", "blank-1", ... ], // ids shown on the board, in order;
+              // "blank-N" = an empty spot (see BLANK SPOTS below)
      setupDone: false,                    // true once the wizard is finished
      createdAt, updatedAt
    }
@@ -39,15 +40,72 @@ export function newBoard(name) {
   };
 }
 
-/** True if this many tiles fills whole screens and stays under the limit. */
+/** True if a board can have this many pictures (at least 1, at most 36). */
 export function isValidCount(n) {
-  return n >= PER_PAGE && n <= MAX_TILES && n % PER_PAGE === 0;
+  return n >= 1 && n <= MAX_TILES;
 }
 
-/** The items shown on the board, in board order. */
+/* ------------------------------------------------------------
+   BLANK SPOTS
+   Every screen shows exactly 4 spots. If the number of pictures doesn't
+   fill the last screen (e.g. 34 = 8 screens + 2), the board gets 1 to 3
+   blank spots to fill it. They live in `enabled` as "blank-1", "blank-2"...
+   so they can be dragged to any screen in Arrange, like a picture.
+   ------------------------------------------------------------ */
+const BLANK_PREFIX = "blank-";
+
+export function isBlankId(id) {
+  return id.startsWith(BLANK_PREFIX);
+}
+
+/** How many pictures (not blanks) are on the board. */
+export function wordCount(board) {
+  return board.enabled.filter(id => !isBlankId(id)).length;
+}
+
+/** How many blank spots n pictures need to fill the last screen (0-3). */
+export function blanksNeeded(n) {
+  return (PER_PAGE - (n % PER_PAGE)) % PER_PAGE;
+}
+
+/** Add or remove blank spots so the board always fills whole screens.
+    Extra blanks are removed starting from the end (so a newly added picture
+    takes the last blank's place); missing blanks are added at the end. */
+export function normalizeBlanks(board) {
+  const need = blanksNeeded(wordCount(board));
+  let have = board.enabled.filter(isBlankId).length;
+  for (let i = board.enabled.length - 1; i >= 0 && have > need; i--) {
+    if (isBlankId(board.enabled[i])) {
+      board.enabled.splice(i, 1);
+      have--;
+    }
+  }
+  while (have < need) {
+    board.enabled.push(BLANK_PREFIX + "new");
+    have++;
+  }
+  // Number them 1, 2, 3 in board order, so each has its own id.
+  let k = 0;
+  board.enabled = board.enabled.map(id => isBlankId(id) ? BLANK_PREFIX + (++k) : id);
+}
+
+/** Put a picture on the board. It goes at the end, but before any blank spots
+    at the end (it fills the first of them), so blanks stay at the end unless
+    the parent moved them somewhere else in Arrange. */
+export function addToBoard(board, id) {
+  let i = board.enabled.length;
+  while (i > 0 && isBlankId(board.enabled[i - 1])) i--;   // i = where the blanks at the end start
+  if (i < board.enabled.length) board.enabled[i] = id;    // take the first trailing blank's place
+  else board.enabled.push(id);
+  normalizeBlanks(board);
+}
+
+/** The items shown on the board, in board order (blank spots as { id, blank: true }). */
 export function enabledItems(board) {
   const byId = new Map(board.items.map(item => [item.id, item]));
-  return board.enabled.map(id => byId.get(id)).filter(Boolean);
+  return board.enabled
+    .map(id => isBlankId(id) ? { id, blank: true } : byId.get(id))
+    .filter(Boolean);
 }
 
 /** Keep a saved board's built-in items in step with starter.js
@@ -86,6 +144,9 @@ export async function loadCurrentBoard() {
     board = all[0] || null;
     if (board) await storage.setCurrentBoardId(board.id);
   }
-  if (board) syncStarters(board);
+  if (board) {
+    syncStarters(board);
+    normalizeBlanks(board);
+  }
   return board;
 }
